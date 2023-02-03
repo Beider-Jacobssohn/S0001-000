@@ -1,0 +1,9 @@
+{
+  "name": "s0001v000",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google-cloud/local-auth": "^2.1.1",
+    "googleapis": "^110.0.0"
+  },
+  "pnpm-lockfile": true
+}
