@@ -1,7 +1,7 @@
-const {authenticate: GoogleAuthorization} = require('@google-cloud/local-auth');
-const { google } = require('googleapis');
-const fs = require('fs').promises;
-const path = require('path');
+import {authenticate as GoogleAuthorization} from '@google-cloud/local-auth';
+import { google } from 'googleapis';
+import fs from 'fs/promises';
+import path from 'path';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
@@ -32,7 +32,8 @@ async function saveCredentials(client) {
     await fs.writeFile(TOKEN_PATH, payload);
 }
 
-async function authorize() {
+
+const authorize = async () => {
     let client = await loadSavedCredentialsIfExist();
     if (client) {
         return client;
@@ -47,4 +48,4 @@ async function authorize() {
     return client;
 }
 
-module.exports = authorize;
+export default authorize;

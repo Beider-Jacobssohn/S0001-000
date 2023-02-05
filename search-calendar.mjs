@@ -1,4 +1,4 @@
-const { google } = require('googleapis');
+import { google } from 'googleapis';
 
 const searchCalendar = async (auth, searchTerms) => {
     const calendar = google.calendar({ version: 'v3', auth });
@@ -29,4 +29,4 @@ const searchCalendar = async (auth, searchTerms) => {
     return matchingEvents;
 }
 
-module.exports = searchCalendar;
+export default searchCalendar;
