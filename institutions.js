@@ -1,7 +1,9 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const INSTITUTIONS_PATH = path.join(process.cwd(), 'institutions.json');
+const dataPath = "./Data/"
+
+const INSTITUTIONS_PATH = path.join(process.cwd(), './Data.institutions.json');
 
 async function readInstitutions() {
     const content = await fs.readFile(INSTITUTIONS_PATH, 'utf-8');

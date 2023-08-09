@@ -1,68 +1,93 @@
-const authorize = require('./googleAuthorization.js');
-const readline = require('readline');
-const { generateReportFromTemplate } = require('./xlsxReportSequencer.js');
-const { attendanceMatrix } = require('./attendanceMatrix.js');
-const templates = require('./templates.json');
+//Current entrypoint (runProgram)
+
 const fs = require('fs');
-
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-
-async function promptForSearchTerms() {
-    return new Promise((resolve) => {
-        let countdown = 0
-        const countdownInterval = setInterval(() => {
-            console.log(`You have ${countdown} seconds left to enter search terms.`);
-            countdown--;
-            if (countdown < 0) {
-                clearInterval(countdownInterval);
-            }
-        }, 1000);
-
-        rl.question('Enter search terms separated by commas: ', (input) => {
-            clearInterval(countdownInterval);
-
-            if (input.trim() === '') {
-                console.log("No search terms provided or time's up. Using default search terms from searchTerms.json.");
-                const defaultSearchTerms = JSON.parse(fs.readFileSync('searchTerms.json', 'utf8'));
-                resolve(defaultSearchTerms);
-            } else {
-                const searchTerms = input.split(',').map(term => term.trim());
-                resolve(searchTerms);
-            }
-        });
-
-        setTimeout(() => {
-            rl.write(null, { ctrl: true, name: 'u' }); // Clear the input line
-            rl.close(); // Close the readline interface
-            console.log("Time's up. Using default search terms from searchTerms.json.");
-            const defaultSearchTerms = JSON.parse(fs.readFileSync('searchTerms.json', 'utf8'));
-            resolve(defaultSearchTerms); // Use default search terms from searchTerms.json
-        }, 15000);
-    });
-}
+const authorize = require('./googleAuthorization.js');
+const {attendanceMatrix} = require('./attendanceMatrix.js');
+const {generateReportFromTemplate} = require('./xlsxReportSequencer.js');
+const templates = JSON.parse(fs.readFileSync('./Data/templates.json', 'utf8'));
+const institutionsData = JSON.parse(fs.readFileSync('./Data/institutions.json', 'utf8'));
+// const studentsData = JSON.parse(fs.readFileSync('./Data/students.json', 'utf8'));
 
 async function runProgram() {
+    //logging:
+    // console.log(institutionsData);
     const auth = await authorize();
-    const searchTerms = await promptForSearchTerms();
-    const attendanceMatrixWorkbook = await attendanceMatrix(auth, searchTerms, new Date('2023-01-01T00:00:00Z'), new Date());
 
-    // Save the attendance matrix workbook to a file
-    const outputFileName = 'attendanceMatrix' + '-' + new Date().toISOString().replace(/:/g, '-') + '.xlsx';
-    await attendanceMatrixWorkbook.xlsx.writeFile(outputFileName);
-    console.log(`Attendance matrix saved to "${outputFileName}"`);
+    for (const institutionObj of institutionsData) {
+        // console.log("------+ obj ", institutionObj)
+        for (const institutionKey in institutionObj) {
+            // console.log("-----= key ", institutionKey)
+            const institution = institutionObj[institutionKey];
+            // console.log(institution);  // This should now print the institution keys (e.g., "123456789")
+            const teachers = institution.teachers;
+            // console.log("------ ",teachers);
 
-    // Generate the report
-    await generateReportFromTemplate(auth,
-        searchTerms,
-        templates.basicMatrix,
-        'generateReportFromTemplate.xlsx',
-        new Date('2023-01-01T00:00:00Z'),
-        new Date());
+            for (const teacherID in teachers) {
+                const teacher = teachers[teacherID];
+                const courses = teacher.courses;
+
+                for (const courseName in courses) {
+                    console.log("courseName: ",courseName)
+                    const course = courses[courseName];
+                    console.log(course)
+                    console.log(course["studentIDs"])
+
+                    if (!course || !course.studentIDs || course.studentIDs.length === 0) {
+                        console.warn(`Skipping course "${courseName}" due to missing student data.`);
+                        continue;
+                    }
+
+                    // Replace student IDs with their corresponding search terms
+                    // const students = course.students.map(studentID => studentsData[studentID]?.searchTerms);
+                    // const students = course.studentIDs.flatMap(studentID => {
+                    //     console.log(studentsData);
+                    //     console.log("-----* ", studentsData[studentID]["searchTerms"])
+                    //     return studentsData[studentID]["searchTerms"];
+                    // });
+                    const studentIDs = course.studentIDs;
+                    if (!studentIDs || studentIDs.length === 0) {
+                        console.warn(`Skipping course "${courseName}" due to missing search terms.`);
+                        continue;
+                    }
+
+                    // Generate the attendance matrix
+                    try {
+                        (`Generating attendance matrix for course "${courseName}" of teacher "${teacherID}" in institution "${institutionKey}"...`);
+
+                        const attendanceMatrixWorkbook = await attendanceMatrix(
+                            auth,
+                            studentIDs,
+                            new Date('2023-01-01T00:00:00Z'),
+                            new Date()
+                        );
+
+                        // Save the attendance matrix workbook to a file
+                        const outputFileName = `./Data/Output/attendanceMatrix-${institutionKey}-${teacherID}-${courseName}-${new Date().toISOString().replace(/:/g, '-')}.xlsx`;
+                        await attendanceMatrixWorkbook.xlsx.writeFile(outputFileName);
+                        console.log(`-----0 Attendance matrix saved to "${outputFileName}"`);
+                    } catch (error) {
+                        console.error(`-----( Failed to generate attendance matrix for course "${courseName}" of teacher "${teacherID}" in institution "${institutionKey}":`, error);
+                        continue;
+                    }
+
+                    // Generate the report
+                    try {
+                        console.log(`-----9 Generating report for course "${courseName}" of teacher "${teacherID}" in institution "${institutionKey}"...`);
+                        await generateReportFromTemplate(
+                            auth,
+                            studentIDs,  // Changed from "students" to "studentIDs"
+                            templates.conservatoryReport, // use the conservatoryReport template object
+                            `./Data/Output/report-${institutionKey}-${teacherID}-${courseName}-${new Date().toISOString().replace(/:/g, '-')}.xlsx`,
+                            new Date('2023-01-01T00:00:00Z'),
+                            new Date()
+                        );
+                    } catch (error) {
+                        console.error(`Failed to generate report for course "${courseName}" of teacher "${teacherID}" in institution "${institutionKey}":`, error);
+                    }
+                }
+            }
+        }
+    }
 }
 
-runProgram();
-
+runProgram().then(r => console.log(r));

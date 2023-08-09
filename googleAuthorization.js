@@ -3,12 +3,14 @@ const { google } = require('googleapis');
 const fs = require('fs').promises;
 const path = require('path');
 
+const dataPath = "./Data"
+
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
-const TOKEN_PATH = path.join(process.cwd(), 'token.json');
-const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
-const BACKUP_TOKEN_PATH = path.join(process.cwd(), 'token_backup.json');
+const TOKEN_PATH = path.join(process.cwd(), dataPath,  'token.json');
+const CREDENTIALS_PATH = path.join(process.cwd(), dataPath, 'credentials.json');
+const BACKUP_TOKEN_PATH = path.join(process.cwd(), dataPath, 'token_backup.json');
 
 async function loadSavedCredentialsIfExist() {
     try {

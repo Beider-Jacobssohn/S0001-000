@@ -1,5 +1,7 @@
 const ExcelJS = require('exceljs');
+const fs = require('fs');
 const searchCalendar = require("./search-calendar");
+const AMstudentsData = JSON.parse(fs.readFileSync('./Data/students.json', 'utf8'));
 
 function getUniqueDates(events) {
     const dates = events.map(event => {
@@ -41,7 +43,7 @@ function writeUniqueDatesToWorksheet(uniqueDates, month, year, worksheet, starti
     });
 }
 
-async function createAttendanceMatrix(events, searchTerms, startingCell = { row: 1, col: 1 }) {
+async function createAttendanceMatrix(events, studentIDs, startingCell = { row: 1, col: 1 }) {
     const uniqueDates = getUniqueDates(events);
     const workbook = new ExcelJS.Workbook();
 
@@ -50,32 +52,42 @@ async function createAttendanceMatrix(events, searchTerms, startingCell = { row:
         const startDate = new Date(event.start.dateTime || event.start.date);
         const month = startDate.getMonth();
         const year = startDate.getFullYear();
+        const formattedDate = formatDate(startDate);
 
         const worksheet = getWorksheetForMonth(workbook, month, year);
         writeUniqueDatesToWorksheet(uniqueDates, month, year, worksheet, startingCell);
 
-        // Write search terms on the Y-axis (starting from row 2)
-        searchTerms.forEach((term, index) => {
+        const summary = event.summary.toLowerCase();  // Let's make it lowercase once for efficiency
+        console.log(`Event Summary: ${event.summary}`);  // Log the event summary
+
+        studentIDs.forEach((studentID, index) => {
+            const student = AMstudentsData[studentID];
             const row = startingCell.row + index + 1;
             const col = startingCell.col;
 
-            worksheet.getCell(row, col).value = term;
-        });
+            // Writing student names on the Y-axis
+            if (student) {
+                worksheet.getCell(row, col).value = `${student.name.he} (${studentID}, ${student.phoneNumbers.join(", ")})`;
+            } else {
+                worksheet.getCell(row, col).value = `Unknown (${studentID})`;
+            }
 
-        // Write matching events
-        const summary = event.summary;
-        const formattedDate = formatDate(startDate);
+            for (i in student)
+            {
+                console.log("----+-",i)
+            }
+            console.log(`STUDENT NAME: ${student.name}\nSTUDENT[1]: ${student[1]} \n sUMMARY: ${summary}`)
 
-        searchTerms.forEach((term, termIndex) => {
-            if (summary.toLowerCase().includes(term.toLowerCase())) {
+            // Checking if the student has a matching event and marking it
+            if (student && summary.includes(student.name.en.toLowerCase())) {
+                console.log(`Match found for student ${student.name} in event: ${event.summary}`);  // Log when a match is found
                 let dateColumn = startingCell.col + 1;
                 while (worksheet.getCell(startingCell.row, dateColumn).value !== formattedDate) {
                     dateColumn++;
                 }
 
-                const cell = worksheet.getCell(termIndex + startingCell.row + 1, dateColumn);
+                const cell = worksheet.getCell(row, dateColumn);
                 cell.value = '✓';
-
                 cell.alignment = {
                     horizontal: 'center',
                     vertical: 'middle',
@@ -84,12 +96,17 @@ async function createAttendanceMatrix(events, searchTerms, startingCell = { row:
         });
     });
 
+
     return workbook; // Return the workbook containing the attendance matrix
 }
 
-async function attendanceMatrix(auth, searchTerms, startDate , endDate, startingCell = { row: 1, col: 1 }) {
+async function attendanceMatrix(auth, studentIDs, startDate, endDate, startingCell = { row: 1, col: 1 }) {
+    // Convert studentIDs to searchTerms for fetching events
+    const searchTerms = studentIDs.flatMap(studentID => AMstudentsData[studentID]?.searchTerms || []);
+
     const matchingEvents = await searchCalendar(auth, searchTerms, startDate, endDate);
-    return await createAttendanceMatrix(matchingEvents, searchTerms, startingCell);
+
+    return await createAttendanceMatrix(matchingEvents, studentIDs, startingCell);
 }
 
 async function attendanceMatrixForTemplate(auth, searchTerms, startDate, endDate) {
@@ -100,7 +117,7 @@ async function attendanceMatrixForTemplate(auth, searchTerms, startDate, endDate
     const matrixWorkbook = await createAttendanceMatrix(matchingEvents, searchTerms);
     const outputFile = `matrixWorkbook-${new Date().toISOString().replace(/:/g, '-')}.xlsx`;
     await matrixWorkbook.xlsx.writeFile(outputFile);
-    console.log(`Matrix workbook saved to "${outputFile}"`);
+    console.log(`+++++_ Matrix workbook saved to "${outputFile}"`);
 
 
     // Extract the attendance matrix as a 2D array from the matrixWorkbook
