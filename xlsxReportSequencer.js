@@ -1,4 +1,3 @@
-const ExcelJS = require('exceljs');
 const { attendanceMatrix} = require('./attendanceMatrix.js');
 const fs = require("fs");
 const institutionsData = JSON.parse(fs.readFileSync('./Data/institutions.json', 'utf8'));
@@ -20,9 +19,8 @@ function insertInstitutionName(sheet, options, currentRow) {
 }
 
 
-async function reportSequencer(auth, searchTerms, institutionKey, teacherID, courseName, template, outputFile, startDate, endDate) {
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Report');
+async function reportSequencer(auth, searchTerms, institutionKey, teacherID, courseName, template, workbook, sheetName, startDate, endDate) {
+    const sheet = workbook.addWorksheet(sheetName);
 
     let currentRow = 1;
 
@@ -41,9 +39,11 @@ async function reportSequencer(auth, searchTerms, institutionKey, teacherID, cou
         currentRow++;
     }
     if (courseName) {
-        insertText(sheet, { value: `Course: ${courseName}` }, currentRow);
+        insertText(sheet, { value: `${courseName}` }, currentRow);
         currentRow++;
     }
+
+    console.log("----+=")
 
     for (const element of template.elements) {
         switch (element.type) {

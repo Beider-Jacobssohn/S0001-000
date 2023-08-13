@@ -115,10 +115,6 @@ async function attendanceMatrixForTemplate(auth, searchTerms, startDate, endDate
 
     // Create the attendance matrix using the createAttendanceMatrix function
     const matrixWorkbook = await createAttendanceMatrix(matchingEvents, searchTerms);
-    const outputFile = `matrixWorkbook-${new Date().toISOString().replace(/:/g, '-')}.xlsx`;
-    await matrixWorkbook.xlsx.writeFile(outputFile);
-    console.log(`+++++_ Matrix workbook saved to "${outputFile}"`);
-
 
     // Extract the attendance matrix as a 2D array from the matrixWorkbook
     const matrix = [];
