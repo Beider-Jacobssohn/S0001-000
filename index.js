@@ -33,7 +33,7 @@ async function runProgram() {
 
                     const studentIDs = course.studentIDs;
                     if (!studentIDs || studentIDs.length === 0) {
-                        console.warn(`Skipping course "${courseName}" due to missing search terms.`);
+                        console.warn(`Skipping course "${courseName}" due to lack of students.`);
                         continue;
                     }
 
@@ -69,7 +69,9 @@ async function runProgram() {
                             finalFilename = `${baseFilename}-${counter}.xlsx`;
                             counter++;
                         }
-
+                        
+                        // Save the file
+                        console.log(`Attempting to save report with filename: ${finalFilename}`);
                         await workbook.xlsx.writeFile(finalFilename);
                         console.log(`++++++Report saved to "${finalFilename}"`);
 
