@@ -75,7 +75,7 @@ async function writeEventsToXlsx(events, searchTerms, outputFile, startingCell =
             }
         });
     });
-
+    // console.log("writeToXlsx.js-writeEventsToXlsx")
     await workbook.xlsx.writeFile(outputFile);
 }
 

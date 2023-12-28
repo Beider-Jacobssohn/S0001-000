@@ -43,7 +43,7 @@ async function reportSequencer(auth, searchTerms, institutionKey, teacherID, cou
         currentRow++;
     }
 
-    console.log("----+=")
+    // console.log("----+=")
 
     for (const element of template.elements) {
         switch (element.type) {
@@ -71,13 +71,13 @@ async function reportSequencer(auth, searchTerms, institutionKey, teacherID, cou
         }
     }
 
-    const filename = `./Data/Output/report_${new Date().toISOString().replace(/[:.]/g, '-')}.xlsx`;
-    try {
-        await workbook.xlsx.writeFile(filename);
-        console.log(`++++++Report saved to "${filename}"`);
-    } catch (error) {
-        console.error(`Failed to save the report to "${filename}":`, error);
-    }
+    // const filename = `./Data/Output/report_${new Date().toISOString().replace(/[:.]/g, '-')}.xlsx`;
+    // try {
+    //     await workbook.xlsx.writeFile(filename);
+    //     console.log(`++++++Report saved to "${filename}"`);
+    // } catch (error) {
+    //     console.error(`Failed to save the report to "${filename}":`, error);
+    // }
 }
 
 function replicateContentToSheetPosition(sourceWorksheet, targetWorksheet, targetStartingCell) {
@@ -107,6 +107,6 @@ function replicateContentToSheetPosition(sourceWorksheet, targetWorksheet, targe
     return lastRow + 1;
 }
 
-    module.exports = {
-        generateReportFromTemplate: reportSequencer
-    }
+module.exports = {
+    generateReportFromTemplate: reportSequencer
+}

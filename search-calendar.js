@@ -5,10 +5,10 @@ const searchCalendar = async (auth, searchTerms, startDate, endDate) => {
 
     // flatSearchTerms = searchTerms.flat
 
-    console.log(typeof(searchTerms[0][0]));
-    console.log(searchTerms[0])
+    // console.log(typeof(searchTerms[0][0]));
+    // console.log(searchTerms[0])
 
-    console.log("Seach terms: ", searchTerms)
+    // console.log("Seach terms: ", searchTerms)
 
     // Search for events that match the search terms
     const events = await calendar.events.list({

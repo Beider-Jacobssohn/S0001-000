@@ -58,7 +58,7 @@ async function createAttendanceMatrix(events, studentIDs, startingCell = { row: 
         writeUniqueDatesToWorksheet(uniqueDates, month, year, worksheet, startingCell);
 
         const summary = event.summary.toLowerCase();  // Let's make it lowercase once for efficiency
-        console.log(`Event Summary: ${event.summary}`);  // Log the event summary
+        // console.log(`Event Summary: ${event.summary}`);  // Log the event summary
 
         studentIDs.forEach((studentID, index) => {
             const student = AMstudentsData[studentID];
@@ -72,15 +72,15 @@ async function createAttendanceMatrix(events, studentIDs, startingCell = { row: 
                 worksheet.getCell(row, col).value = `Unknown (${studentID})`;
             }
 
-            for (i in student)
-            {
-                console.log("----+-",i)
-            }
-            console.log(`STUDENT NAME: ${student.name}\nSTUDENT[1]: ${student[1]} \n sUMMARY: ${summary}`)
+            // for (i in student)
+            // {
+            //     console.log("----+-",i)
+            // }
+            // console.log(`STUDENT NAME: ${student.name}\nSTUDENT[1]: ${student[1]} \n sUMMARY: ${summary}`)
 
             // Checking if the student has a matching event and marking it
             if (student && summary.includes(student.name.en.toLowerCase())) {
-                console.log(`Match found for student ${student.name} in event: ${event.summary}`);  // Log when a match is found
+                // console.log(`Match found for student ${student.name} in event: ${event.summary}`);  // Log when a match is found
                 let dateColumn = startingCell.col + 1;
                 while (worksheet.getCell(startingCell.row, dateColumn).value !== formattedDate) {
                     dateColumn++;
