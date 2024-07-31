@@ -9,7 +9,7 @@ async function runProgram() {
     const auth = await authorize();
 
     // Define the startDate and endDate constants
-    const startDate = new Date('2023-01-01T00:00:00Z');
+    const startDate = new Date('2023-12-21T00:00:00Z');
     const endDate = new Date();
 
     for (const institutionObj of institutionsData) {
